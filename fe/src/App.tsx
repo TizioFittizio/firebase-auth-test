@@ -4,42 +4,36 @@ import { Auth } from './Auth';
 
 class App extends React.Component<{}, {log: string[]}> {
 
+  private auth: Auth;
+
   constructor(props: {}){
     super(props);
-      this.state = {
-        log: []
-      };
+    this.auth = new Auth(this.logFunction);
   }
 
   public render(){
     return(
       <div style={{padding: '100px', display: 'flex', flexDirection: 'row'}}>
-        <div style={{flex: 1}}>
+        <div style={{flex: 1, flexDirection: 'column', display: 'flex', border: '1px solid black', padding: '10px'}}>
+          <button onClick={this.onSignUpButtonClick}>SignUp</button>
           <button onClick={this.onLoginButtonClick}>Login</button>
-        </div>
-        <div style={{flex: 1}}>
-          {this.renderLog()}
         </div>
       </div>
     );
   }
 
-  private renderLog = () => {
-    return this.state.log.map(x => {
-      return <p key={Math.random()}>{x}</p>
-    })
+  private onSignUpButtonClick = () => {
+    this.auth.signUp();
   }
 
   private onLoginButtonClick = () => {
-    const auth = new Auth(this.logCallback);
-    auth.login();
+
   }
 
-  private logCallback = (...text: string[]) => {
-    const { log } = this.state;
-    const newLog = [...log, text.join(' ')];
-    this.setState({log: newLog});
+  private logFunction = (...text: string[]) => {
+    console.log(...text)
   }
+
 
 }
 

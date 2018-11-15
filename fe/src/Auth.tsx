@@ -1,38 +1,48 @@
-const keys = require('./keys.json');
-import * as Msal from 'msal';
+const keys = require('./config/keys.json');
+import * as firebase from 'firebase';
 
 export class Auth {
 
-    private static readonly APPLICATION_CONFIG = {
-        clientID: keys.clientID,
-        authority: "https://login.microsoftonline.com/tfp/b2ctestb2ctest.onmicrosoft.com/b2c_1_google",
-        graphScopes: ['no-op']
-    };
+    private static readonly TOKEN_KEY = 'access_token';
 
+    private firebaseAuth: firebase.auth.Auth;
+    private logFunction: (...text: string[]) => void;
 
-    private logCallback: (...text: string[]) => void;
-    private userAgentApplication: Msal.UserAgentApplication;
-
-    constructor(logCallback: (...text: string[]) => void){
-        this.logCallback = logCallback;
-        this.userAgentApplication = new Msal.UserAgentApplication(Auth.APPLICATION_CONFIG.clientID, Auth.APPLICATION_CONFIG.authority, this.authCallback)
+    constructor(logFunction: (...text: string[]) => void){
+        firebase.initializeApp(keys);
+        this.logFunction = logFunction;
+        this.firebaseAuth = firebase.auth();
     }
 
-    public async login(){
+    public async access(){
         try {
-            const loginQueryParams = 'ulp=gasp';
-            const loginResponse = await this.userAgentApplication.loginPopup(Auth.APPLICATION_CONFIG.graphScopes, loginQueryParams);
-            const token = await this.userAgentApplication.acquireTokenSilent(Auth.APPLICATION_CONFIG.graphScopes);
-            this.logCallback(loginResponse, token);
+            // const token = localStorage.getItem(Auth.TOKEN_KEY);
         }
         catch (e){
-            this.logCallback(e);
+            alert(e)
+        }
+    }
+
+    public async signUp(){
+        try {
+            const email = prompt('Insert email') || '';
+            const password = prompt('Insert password (a random one, this is not even secure whatever)') || '';
+            const confirmPassword = prompt('Confirm password') || '?';
+            if (password !== confirmPassword) throw new Error('Password doesn\'t match')
+            const credentials = await this.firebaseAuth.createUserWithEmailAndPassword(email, password)
+            const token = await this.firebaseAuth.currentUser!.getIdToken(true)
+            this.logFunction('User information', JSON.stringify(credentials.user, null, 2));
+            this.logFunction('Token', token);
+            localStorage.setItem(Auth.TOKEN_KEY, token);
+        }
+        catch (e){
+            alert(e)
         }
         
     }
 
-    private authCallback(errorDesc: string, token: string, error: any, tokenType: any){
-        this.logCallback(errorDesc, token, error, tokenType);
+    public login(){
+        
     }
 
 }
